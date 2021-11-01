@@ -18,6 +18,7 @@ async function run() {
         await client.connect();
         const database = client.db('ashiqTourism');
         const destinationsCollection = database.collection('destinations');
+        const ordersCollection = database.collection('orders');
         console.log('database connected successfully')
 
         // get api
@@ -25,6 +26,13 @@ async function run() {
             const cursor = destinationsCollection.find({});
             const destinations = await cursor.toArray();
             res.send(destinations);
+        });
+
+        // get orders api
+        app.get('/orders', async(req, res) =>{
+            const cursor = ordersCollection.find({});
+            const orders = await cursor.toArray();
+            res.send(orders);
         });
 
         // get single destination
@@ -44,6 +52,15 @@ async function run() {
             console.log(result);
             res.json(result)
         });
+        // order post api
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            console.log('hit the post api', order);
+          
+            const result = await ordersCollection.insertOne(order);
+            console.log(result);
+            res.json(result)
+        });
         // DELETE API
         app.delete('/destinations/:id', async(req, res) => {
             const id = req.params.id;
@@ -51,6 +68,46 @@ async function run() {
             const result = await destinationsCollection.deleteOne(query);
             res.json(result);
         })
+
+        // / Delete order
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
+            // console.log(service);
+            res.json(result)
+        })
+
+        // approve order
+        app.put('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: ObjectId(id) };
+            const doc = {
+                $set: {
+                    status: 'Approved'
+                }
+            }
+            const service = await ordersCollection.updateOne(query, doc);
+            // console.log(service);
+            res.send(service)
+        })
+
+
+
+        // single order api
+        app.get('/orders/:Id', async (req, res) => {
+            const userEmail = req.params.Id;
+            console.log(userEmail);
+            // console.log('hit the post');
+            console.log(userEmail);
+            const query = { email: userEmail };
+            const orders = await ordersCollection.find(query).toArray();
+            // console.log(user);
+            res.json(orders)
+        });
+
     }
     finally {
         //await client.close();
